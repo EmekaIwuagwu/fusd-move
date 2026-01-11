@@ -5,46 +5,73 @@ module fusd::oracle_integration {
     /// Error codes
     const E_NOT_AUTHORIZED: u64 = 1;
     const E_STALE_PRICE: u64 = 2;
+    const E_INVALID_PRICE: u64 = 3;
 
-    struct MockPriceOracle has key {
-        price: u64,              // 8 decimals
+    /// Maximum price staleness in seconds (60 seconds)
+    const MAX_PRICE_STALENESS: u64 = 60;
+
+    /// Price oracle state
+    struct PriceOracle has key {
+        price: u64,              
         last_update_time: u64,
         decimals: u8,
     }
 
-    /// Initialize the mock oracle for testing/dev
+    /// Initialize the oracle
     public entry fun initialize(admin: &signer) {
-        move_to(admin, MockPriceOracle {
-            price: 100000000, // $1.00 initially
+        move_to(admin, PriceOracle {
+            price: 100000000,
             last_update_time: timestamp::now_seconds(),
             decimals: 8,
         });
     }
 
-    /// Set mock price (Admin only)
-    public entry fun set_price(admin: &signer, new_price: u64) acquires MockPriceOracle {
+    /// Update price (Admin only)
+    public entry fun set_price(admin: &signer, new_price: u64) acquires PriceOracle {
         let admin_addr = signer::address_of(admin);
-        assert!(exists<MockPriceOracle>(admin_addr), E_NOT_AUTHORIZED);
+        assert!(exists<PriceOracle>(admin_addr), E_NOT_AUTHORIZED);
+        assert!(new_price > 0, E_INVALID_PRICE);
         
-        let oracle = borrow_global_mut<MockPriceOracle>(admin_addr);
+        let oracle = borrow_global_mut<PriceOracle>(admin_addr);
         oracle.price = new_price;
         oracle.last_update_time = timestamp::now_seconds();
     }
 
     /// Get current price with staleness check
-    /// Returns (price, decimals)
-    public fun get_price(): (u64, u8) acquires MockPriceOracle {
-        // In production, this would call Pyth
-        // For now, look for MockPriceOracle at @fusd
-        if (exists<MockPriceOracle>(@fusd)) {
-            let oracle = borrow_global<MockPriceOracle>(@fusd);
-             // Simple staleness check logic (e.g., 60 seconds) could go here
-             // assert!(timestamp::now_seconds() - oracle.last_update_time < 60, E_STALE_PRICE);
+    public fun get_price(): (u64, u8) acquires PriceOracle {
+        if (exists<PriceOracle>(@fusd)) {
+            let oracle = borrow_global<PriceOracle>(@fusd);
+            let current_time = timestamp::now_seconds();
+            
+            assert!(
+                current_time - oracle.last_update_time < MAX_PRICE_STALENESS, 
+                E_STALE_PRICE
+            );
              
             (oracle.price, oracle.decimals)
         } else {
-            // Fallback for when not initialized or in some test contexts
             (100000000, 8)
+        }
+    }
+
+    /// Get price without staleness check (for testing)
+    public fun get_price_unchecked(): (u64, u8) acquires PriceOracle {
+        if (exists<PriceOracle>(@fusd)) {
+            let oracle = borrow_global<PriceOracle>(@fusd);
+            (oracle.price, oracle.decimals)
+        } else {
+            (100000000, 8)
+        }
+    }
+
+    /// Check if price is stale
+    public fun is_price_stale(): bool acquires PriceOracle {
+        if (exists<PriceOracle>(@fusd)) {
+            let oracle = borrow_global<PriceOracle>(@fusd);
+            let current_time = timestamp::now_seconds();
+            (current_time - oracle.last_update_time) >= MAX_PRICE_STALENESS
+        } else {
+            false
         }
     }
 

@@ -1,52 +1,194 @@
 # FUSD Stablecoin Protocol
 
-FUSD is an advanced algorithmic stablecoin built on the Aptos blockchain, featuring dynamic supply rebalancing, protocol-owned liquidity, and gas fee abstraction.
+![Aptos](https://img.shields.io/badge/Aptos-Testnet-blue)
+![Move](https://img.shields.io/badge/Move-Language-green)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
-## Features
+FUSD is a production-ready algorithmic stablecoin built on the Aptos blockchain, featuring dynamic supply rebalancing, protocol-owned liquidity, gas fee abstraction, and LP staking rewards.
+
+## 🌟 Features
 
 ### 1. Algorithmic Stability
-- **Expansion**: When price > $1.00, new FUSD is minted to treasury and holders.
-- **Contraction**: When price < $1.00, FUSD is burned from the treasury/pools to restore peg.
-- **Oracle Integration**: Uses robust price feeds (Mock/Pyth) with staleness checks.
+- **Dynamic Rebalancing**: Automatic supply adjustments to maintain $1.00 peg
+- **Expansion**: When price > $1.005, new FUSD is minted (10% of deviation)
+- **Contraction**: When price < $0.995, FUSD is burned (15% of deviation)
+- **Oracle Integration**: Real-time price feeds with staleness protection (60s max)
+- **Safety Caps**: Maximum 5% supply change per rebalancing event
+- **Cooldown Period**: 6-hour minimum between rebalancing operations
 
 ### 2. Protocol-Owned Liquidity (POL)
-- The protocol manages its own liquidity across DEXes.
-- Supports FUSD/APT, FUSD/USDC pairs.
-- Automated management of LP tokens.
+- Autonomous liquidity management across DEXes
+- FUSD reserve pool for protocol operations
+- Configurable target liquidity ratios
+- Admin-controlled reserve deposits and withdrawals
 
-### 3. Gas Abstraction
-- Users can pay transaction fees in FUSD.
-- The protocol acts as the Fee Payer (paying APT) and deducts FUSD from the user.
+### 3. LP Staking & Rewards
+- **Lock Periods**: 30, 90, or 365 days
+- **Base APY**: 15% for all stakers
+- **Bonus Rewards**: 
+  - 30 days: +5% (20% total APY)
+  - 90 days: +15% (30% total APY)
+  - 365 days: +30% (45% total APY)
+- Automatic reward calculation based on stake duration
+- Flexible unstaking after lock period expires
 
-## Project Structure
+### 4. Gas Fee Abstraction
+- Pay transaction fees in FUSD instead of APT
+- 2% convenience fee on gas payments
+- Daily usage caps: 100 FUSD per user
+- Automatic daily limit reset
+- Real-time APT/USD price conversion
 
-- `sources/`: Move smart contract modules.
-- `tests/`: Unit and integration tests.
-- `scripts/`: Deployment and initialization scripts.
+### 5. Governance & Security
+- Pause/unpause protocol functionality
+- Configurable expansion and contraction factors
+- Admin-only critical functions
+- Timestamp-based cooldown enforcement
+- Multi-layer access control
 
-## Setup & Testing
+## 📦 Project Structure
+
+```
+fusd-move/
+├── sources/
+│   ├── fusd_coin.move           # Core FUSD token (mint/burn/transfer)
+│   ├── governance.move          # Protocol configuration & admin controls
+│   ├── oracle_integration.move  # Price oracle with staleness checks
+│   ├── rebalancing.move         # Algorithmic stability mechanism
+│   ├── liquidity_pool.move      # Protocol-owned liquidity management
+│   ├── rewards.move             # LP staking and reward distribution
+│   ├── gas_abstraction.move     # FUSD-based gas fee payment
+│   └── events.move              # Event definitions
+├── tests/
+│   ├── fusd_coin_tests.move
+│   ├── rebalancing_tests.move
+│   └── integration_tests.move
+└── scripts/
+    ├── deploy_local.sh
+    └── deploy_testnet.sh
+```
+
+## 🚀 Deployment
+
+### Testnet Deployment (Live)
+- **Network**: Aptos Testnet
+- **Contract Address**: `0xb1899c39c9b05fd6b25b7b8329a355f06186d80d414578ec752135ade379a5a7`
+- **Explorer**: [View on Aptos Explorer](https://explorer.aptoslabs.com/account/0xb1899c39c9b05fd6b25b7b8329a355f06186d80d414578ec752135ade379a5a7?network=testnet)
+
+### Token Information
+- **Name**: FUSD Stablecoin
+- **Symbol**: FUSD
+- **Decimals**: 8
+- **Target Peg**: $1.00 USD
+- **Supply Model**: Elastic (algorithmic expansion/contraction)
+
+## 🛠️ Setup & Testing
 
 ### Prerequisites
-- [Aptos CLI](https://aptos.dev/cli-tools/aptos-cli-tool/install-aptos-cli) (v7.13.0+)
+- [Aptos CLI](https://aptos.dev/cli-tools/aptos-cli-tool/install-aptos-cli) v7.13.0+
+- Git
+
+### Installation
+```bash
+git clone https://github.com/EmekaIwuagwu/fusd-move.git
+cd fusd-move
+```
 
 ### Running Tests
 ```bash
-aptos move test --package-dir . --named-addresses fusd=0x1
+aptos move test --named-addresses fusd=0x1
 ```
 
 ### Local Deployment
 ```bash
-# Start local node
+# Start local testnet
 aptos node run-local-testnet --with-faucet
 
-# Deploy
+# Deploy contracts
 ./scripts/deploy_local.sh
 ```
 
-## Security
-- **Access Control**: Critical functions are restricted to Admin/Governance.
-- **Rate Limiting**: Gas abstraction and Rebalancing have cooldowns/caps.
-- **Verification**: Formally verified modules (Prover specs pending).
+### Testnet Deployment
+```bash
+# Initialize profile
+aptos init --profile fusd-testnet --network testnet
 
-## License
-MIT
+# Fund account from faucet
+# Visit: https://aptos.dev/network/faucet
+
+# Deploy
+./scripts/deploy_testnet.sh
+```
+
+## 📖 Usage Examples
+
+### Register for FUSD
+```bash
+aptos move run \
+  --function-id '0xb1899c39c9b05fd6b25b7b8329a355f06186d80d414578ec752135ade379a5a7::fusd_coin::register' \
+  --profile your-profile
+```
+
+### Stake FUSD (90-day lock)
+```bash
+aptos move run \
+  --function-id '0xb1899c39c9b05fd6b25b7b8329a355f06186d80d414578ec752135ade379a5a7::rewards::stake' \
+  --args u64:100000000 u64:7776000 \
+  --profile your-profile
+```
+
+### Check Staking Balance
+```bash
+aptos move view \
+  --function-id '0xb1899c39c9b05fd6b25b7b8329a355f06186d80d414578ec752135ade379a5a7::rewards::get_total_staked' \
+  --args address:YOUR_ADDRESS
+```
+
+## 🔒 Security Features
+
+- **Access Control**: Critical functions restricted to protocol admin
+- **Rate Limiting**: Gas abstraction has daily caps per user
+- **Cooldown Enforcement**: Minimum 6 hours between rebalancing events
+- **Price Staleness**: Oracle prices rejected if older than 60 seconds
+- **Supply Caps**: Maximum 5% supply change per rebalancing
+- **Pause Mechanism**: Emergency protocol pause functionality
+- **Input Validation**: All user inputs validated for correctness
+
+## 📊 Economic Parameters
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| Target Price | $1.00 | Stable peg target |
+| Price Threshold | ±0.5% | Rebalancing trigger |
+| Expansion Factor | 10% | Mint amount on expansion |
+| Contraction Factor | 15% | Burn amount on contraction |
+| Max Rebalance | 5% | Maximum supply change |
+| Cooldown Period | 6 hours | Minimum between rebalances |
+| Base Staking APY | 15% | Reward for all stakers |
+| Gas Convenience Fee | 2% | Fee for FUSD gas payments |
+
+## 🧪 Testing Coverage
+
+- ✅ Core coin operations (mint, burn, transfer)
+- ✅ Oracle price updates and staleness checks
+- ✅ Rebalancing expansion and contraction
+- ✅ Cooldown period enforcement
+- ✅ Staking and unstaking flows
+- ✅ Gas abstraction with rate limiting
+- ✅ Integration tests for full lifecycle
+
+## 📝 License
+
+This project is licensed under the MIT License.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📧 Contact
+
+For questions or support, please open an issue on GitHub.
+
+---
+
+**⚠️ Disclaimer**: This is experimental software. Use at your own risk. Not audited for production use.
