@@ -15,9 +15,13 @@ module fusd::rebalancing {
     const E_NOT_ADMIN: u64 = 4003;
     const E_PAUSED: u64 = 4004;
     const E_INSUFFICIENT_RESERVES: u64 = 4005;
+    const E_CIRCUIT_BREAKER_TRIGGERED: u64 = 4006;
 
     /// Maximum single rebalance as percentage of total supply (5%)
     const MAX_REBALANCE_PERCENT: u64 = 5;
+    
+    /// Insurance Fund Fee (1%)
+    const INSURANCE_FEE_BPS: u64 = 100;
 
     struct RebalanceEvents has key {
         expansion_events: event::EventHandle<events::RebalanceExpansion>,
@@ -35,8 +39,6 @@ module fusd::rebalancing {
 
     /// Execute the rebalancing logic with safety checks
     public entry fun execute_rebalance(admin: &signer) acquires RebalanceEvents {
-        let admin_addr = signer::address_of(admin);
-        
         // Safety checks
         assert!(!governance::is_paused(), E_PAUSED);
         assert!(governance::can_rebalance(), E_COOLDOWN_ACTIVE);
@@ -46,23 +48,33 @@ module fusd::rebalancing {
         // Use TWAP for more stable price
         let (price, _) = oracle_integration::get_twap();
 
-        let threshold = target_price * 5 / 1000;
+        // Circuit Breaker Check
+        let threshold_bps = governance::get_circuit_breaker_threshold();
+        let deviation = if (price > target_price) { price - target_price } else { target_price - price };
+        let deviation_bps = (deviation as u128) * 10000 / (target_price as u128);
+        
+        if (deviation_bps > (threshold_bps as u128)) {
+            governance::trigger_circuit_breaker();
+            return
+        };
 
-        if (price > target_price + threshold) {
-            execute_expansion(admin, admin_addr, price, target_price, exp_factor);
-        } else if (price < target_price - threshold) {
-            execute_contraction(admin, admin_addr, price, target_price, cont_factor);
+        let price_threshold = target_price * 5 / 1000;
+
+        if (price > target_price + price_threshold) {
+            execute_expansion(admin, price, target_price, exp_factor);
+        } else if (price < target_price - price_threshold) {
+            execute_contraction(admin, price, target_price, cont_factor);
         }
     }
 
     /// Execute expansion (minting)
     fun execute_expansion(
         admin: &signer,
-        admin_addr: address,
         price: u64,
         target_price: u64,
         exp_factor: u64
     ) acquires RebalanceEvents {
+        let admin_addr = signer::address_of(admin);
         let supply = fusd_coin::get_supply();
         let price_diff = price - target_price;
         
@@ -81,8 +93,16 @@ module fusd::rebalancing {
         };
 
         if (amount_to_mint > 0) {
+             // Mint for rebalancing
              let coins = fusd_coin::mint(admin, amount_to_mint);
              aptos_framework::coin::deposit(admin_addr, coins);
+             
+             // Mint Insurance Fee
+             let insurance_fee = (amount_to_mint as u128) * (INSURANCE_FEE_BPS as u128) / 10000;
+             if (insurance_fee > 0) {
+                 let fee_coins = fusd_coin::mint(admin, (insurance_fee as u64));
+                 liquidity_pool::deposit_to_insurance_fund(fee_coins);
+             };
 
              // Update timestamp BEFORE emitting event
              governance::update_rebalance_timestamp();
@@ -97,14 +117,14 @@ module fusd::rebalancing {
         }
     }
 
-    /// Execute contraction (burning) - FIXED: Pull from reserves
+    /// Execute contraction (burning) - UPDATED: Use Insurance Fund & Reserves
     fun execute_contraction(
         admin: &signer,
-        admin_addr: address,
         price: u64,
         target_price: u64,
         cont_factor: u64
     ) acquires RebalanceEvents {
+        let admin_addr = signer::address_of(admin);
         let price_diff = target_price - price;
         let supply = fusd_coin::get_supply();
         
@@ -123,49 +143,53 @@ module fusd::rebalancing {
         };
 
         if (amount_to_burn > 0) {
-             // FIXED CRITICAL-02: Try to burn from reserves first
-             let reserves = liquidity_pool::get_fusd_reserves();
-             let admin_balance = fusd_coin::balance(admin_addr);
-             let total_available = reserves + admin_balance;
+             let burned_so_far = 0u64;
              
-             assert!(total_available >= amount_to_burn, E_INSUFFICIENT_RESERVES);
+             // 1. Try Insurance Fund first (Protocol safety net)
+             let insurance_coins = liquidity_pool::pull_from_insurance_fund(amount_to_burn);
+             let from_insurance = aptos_framework::coin::value(&insurance_coins);
+             if (from_insurance > 0) {
+                 fusd_coin::burn_from_system(insurance_coins);
+                 burned_so_far = burned_so_far + from_insurance;
+             } else {
+                 aptos_framework::coin::destroy_zero(insurance_coins);
+             };
              
-             let burn_amount = 0u64;
-             
-             // Burn from reserves first
-             if (reserves > 0) {
-                 let from_reserves = if (reserves >= amount_to_burn) {
-                     amount_to_burn
-                 } else {
-                     reserves
-                 };
+             // 2. Try regular reserves
+             if (burned_so_far < amount_to_burn) {
+                 let remaining = amount_to_burn - burned_so_far;
+                 let reserves = liquidity_pool::get_fusd_reserves();
+                 let from_reserves = if (reserves >= remaining) { remaining } else { reserves };
                  
-                 liquidity_pool::burn_from_reserves(admin, from_reserves);
-                 burn_amount = burn_amount + from_reserves;
-             };
-             
-             // Burn remaining from admin balance if needed
-             if (burn_amount < amount_to_burn && admin_balance > 0) {
-                 let from_admin = amount_to_burn - burn_amount;
-                 if (from_admin > admin_balance) {
-                     from_admin = admin_balance;
+                 if (from_reserves > 0) {
+                     liquidity_pool::burn_from_reserves(admin, from_reserves);
+                     burned_so_far = burned_so_far + from_reserves;
                  };
-                 
-                 let coins = aptos_framework::coin::withdraw<fusd_coin::FUSD>(admin, from_admin);
-                 fusd_coin::burn(admin, coins);
-                 burn_amount = burn_amount + from_admin;
              };
              
-             // Update timestamp BEFORE emitting event
-             if (burn_amount > 0) {
-                 governance::update_rebalance_timestamp();
+             // 3. Last resort: Admin balance
+             if (burned_so_far < amount_to_burn) {
+                 let remaining = amount_to_burn - burned_so_far;
+                 let admin_balance = fusd_coin::balance(admin_addr);
+                 let from_admin = if (admin_balance >= remaining) { remaining } else { admin_balance };
+                 
+                 if (from_admin > 0) {
+                     let coins = aptos_framework::coin::withdraw<fusd_coin::FUSD>(admin, from_admin);
+                     fusd_coin::burn(admin, coins);
+                     burned_so_far = burned_so_far + from_admin;
+                 };
              };
+             
+             assert!(burned_so_far > 0, E_INSUFFICIENT_RESERVES);
+             
+             // Update timestamp
+             governance::update_rebalance_timestamp();
              
              let event_handles = borrow_global_mut<RebalanceEvents>(@fusd);
              event::emit_event(&mut event_handles.contraction_events, events::new_rebalance_contraction(
                  price,
                  fusd_coin::get_supply(),
-                 burn_amount,
+                 burned_so_far,
                  timestamp::now_seconds(),
              ));
         }

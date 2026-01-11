@@ -191,6 +191,9 @@ aptos move view \
 ## 🔒 Security Features
 
 - **Access Control**: Critical functions restricted to protocol admin
+- **Timelock Governance**: Mandatory 24-hour delay for all critical parameter updates
+- **Circuit Breaker**: Automated protocol pause if price deviates > 25% from peg
+- **Insurance Fund**: Dedicated reserve buffer funded by 1% expansion fees
 - **Rate Limiting**: Gas abstraction has daily caps per user
 - **Cooldown Enforcement**: Minimum 6 hours between rebalancing events
 - **Price Staleness**: Oracle prices rejected if older than 60 seconds
@@ -235,12 +238,16 @@ All critical vulnerabilities have been fixed! See [SECURITY_FIXES.md](SECURITY_F
 
 ### Key Improvements
 1. ✅ Epoch-based mint limits (prevents unlimited minting)
-2. ✅ Multi-source burning (prevents death spiral)
-3. ✅ TWAP + price deviation limits (prevents oracle manipulation)
-4. ✅ Reentrancy protection (state-before-call pattern)
-5. ✅ Overflow protection (all calculations checked)
-6. ✅ Comprehensive input validation
-7. ✅ Full event coverage for monitoring
+2. ✅ **Timelock Governance** (24h delay for admin actions)
+3. ✅ **Circuit Breaker** (Automated pause on extreme volatility)
+4. ✅ **Insurance Fund** (Native backstop for peg defense)
+5. ✅ Multi-source burning (prevents death spiral)
+6. ✅ TWAP + price deviation limits (prevents oracle manipulation)
+7. ✅ Backward Compatibility (Safe upgrade checks)
+8. ✅ Reentrancy protection (state-before-call pattern)
+9. ✅ Overflow protection (all calculations checked)
+10. ✅ Comprehensive input validation
+11. ✅ Full event coverage for monitoring
 
 ### Deployment Status
 - ✅ **Testnet**: Ready for expanded testing

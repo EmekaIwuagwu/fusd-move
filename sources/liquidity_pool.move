@@ -30,6 +30,11 @@ module fusd::liquidity_pool {
         deposit_events: EventHandle<ReserveDepositEvent>,
         withdraw_events: EventHandle<ReserveWithdrawEvent>,
     }
+    
+    /// Insurance Fund State
+    struct InsuranceFund has key {
+        balance: Coin<FUSD>,
+    }
 
     /// Initialize protocol liquidity management
     public entry fun initialize(admin: &signer) {
@@ -41,6 +46,12 @@ module fusd::liquidity_pool {
                 deposit_events: account::new_event_handle<ReserveDepositEvent>(admin),
                 withdraw_events: account::new_event_handle<ReserveWithdrawEvent>(admin),
             });
+        };
+        
+        if (!exists<InsuranceFund>(signer::address_of(admin))) {
+            move_to(admin, InsuranceFund {
+                balance: coin::zero<FUSD>(),
+            });
         }
     }
 
@@ -51,7 +62,7 @@ module fusd::liquidity_pool {
         let admin_addr = signer::address_of(admin);
         let coins = coin::withdraw<FUSD>(admin, amount);
         
-        let state = borrow_global_mut<ProtocolLiquidity>(admin_addr);
+        let state = borrow_global_mut<ProtocolLiquidity>(@fusd);
         coin::merge(&mut state.fusd_reserves, coins);
         state.total_liquidity_usd = state.total_liquidity_usd + amount;
         
@@ -68,7 +79,7 @@ module fusd::liquidity_pool {
         assert!(admin_addr == @fusd, E_NOT_AUTHORIZED);
         assert!(amount > 0, E_ZERO_AMOUNT);
         
-        let state = borrow_global_mut<ProtocolLiquidity>(admin_addr);
+        let state = borrow_global_mut<ProtocolLiquidity>(@fusd);
         let reserve_value = coin::value(&state.fusd_reserves);
         assert!(reserve_value >= amount, E_INSUFFICIENT_LIQUIDITY);
         
@@ -86,6 +97,20 @@ module fusd::liquidity_pool {
             amount,
             timestamp: aptos_framework::timestamp::now_seconds(),
         });
+    }
+
+    /// Add to Insurance Fund
+    public fun deposit_to_insurance_fund(coins: Coin<FUSD>) acquires InsuranceFund {
+        let fund = borrow_global_mut<InsuranceFund>(@fusd);
+        coin::merge(&mut fund.balance, coins);
+    }
+    
+    /// Use Insurance Fund for contraction (called by rebalancing)
+    public fun pull_from_insurance_fund(amount: u64): Coin<FUSD> acquires InsuranceFund {
+        let fund = borrow_global_mut<InsuranceFund>(@fusd);
+        let val = coin::value(&fund.balance);
+        let pull_amount = if (val >= amount) { amount } else { val };
+        coin::extract(&mut fund.balance, pull_amount)
     }
 
     /// Burn from reserves (called by rebalancing module)
@@ -132,6 +157,15 @@ module fusd::liquidity_pool {
             0
         }
     }
+    
+    /// Get Insurance Fund balance
+    public fun get_insurance_balance(): u64 acquires InsuranceFund {
+        if (exists<InsuranceFund>(@fusd)) {
+            coin::value(&borrow_global<InsuranceFund>(@fusd).balance)
+        } else {
+            0
+        }
+    }
 
     /// Update target liquidity ratio (Admin only)
     public entry fun set_target_ratio(admin: &signer, new_ratio: u64) acquires ProtocolLiquidity {
@@ -139,7 +173,7 @@ module fusd::liquidity_pool {
         assert!(admin_addr == @fusd, E_NOT_AUTHORIZED);
         assert!(new_ratio > 0 && new_ratio <= 100, E_INVALID_AMOUNT);
         
-        let state = borrow_global_mut<ProtocolLiquidity>(admin_addr);
+        let state = borrow_global_mut<ProtocolLiquidity>(@fusd);
         state.target_liquidity_ratio = new_ratio;
     }
 }

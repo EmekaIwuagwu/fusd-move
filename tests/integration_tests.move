@@ -1,6 +1,7 @@
 #[test_only]
 module fusd::integration_tests {
     use std::signer;
+    use std::debug;
     use aptos_framework::account;
     use aptos_framework::timestamp;
     use aptos_framework::coin;
@@ -22,16 +23,16 @@ module fusd::integration_tests {
 
         // 1. Initialize Protocol
         fusd_coin::init_for_test(&admin);
-        fusd_coin::register(&user); 
-        fusd_coin::register(&admin);
+        coin::register<fusd_coin::FUSD>(&user); 
+        coin::register<fusd_coin::FUSD>(&admin);
 
         governance::initialize(&admin, @fusd, @fusd);
         oracle_integration::init_for_test(&admin);
         rebalancing::initialize_events(&admin);
         gas_abstraction::initialize(&admin, @fusd);
 
-        // 2. Mint Genesis Supply (100k FUSD)
-        let initial_supply = 100000 * 100000000;
+        // 2. Mint Genesis Supply (500 FUSD)
+        let initial_supply = 500 * 100000000;
         let coins = fusd_coin::mint(&admin, initial_supply);
         coin::deposit(signer::address_of(&admin), coins);
 
