@@ -74,17 +74,32 @@ fusd-move/
 
 ## 🚀 Deployment
 
-### Testnet Deployment (Live)
+### Testnet Deployment (Live) - v1.1.0 ✅
 - **Network**: Aptos Testnet
-- **Contract Address**: `0xb1899c39c9b05fd6b25b7b8329a355f06186d80d414578ec752135ade379a5a7`
-- **Explorer**: [View on Aptos Explorer](https://explorer.aptoslabs.com/account/0xb1899c39c9b05fd6b25b7b8329a355f06186d80d414578ec752135ade379a5a7?network=testnet)
+- **Version**: 1.1.0 (Security Hardened)
+- **Contract Address**: `0x2791c639877af206489abee02270c597aa6aea0e3c896b72cc99bb4832ca37e7`
+- **Deployment Date**: January 11, 2026
+- **Status**: Live and Operational
 
-### Token Information
-- **Name**: FUSD Stablecoin
-- **Symbol**: FUSD
-- **Decimals**: 8
-- **Target Peg**: $1.00 USD
-- **Supply Model**: Elastic (algorithmic expansion/contraction)
+#### 🔗 Explorer Links
+- **Account Overview**: [View Account](https://explorer.aptoslabs.com/account/0x2791c639877af206489abee02270c597aa6aea0e3c896b72cc99bb4832ca37e7?network=testnet)
+- **Deployed Modules**: [View Modules](https://explorer.aptoslabs.com/account/0x2791c639877af206489abee02270c597aa6aea0e3c896b72cc99bb4832ca37e7/modules?network=testnet)
+- **Transactions**: [View Transactions](https://explorer.aptoslabs.com/account/0x2791c639877af206489abee02270c597aa6aea0e3c896b72cc99bb4832ca37e7/transactions?network=testnet)
+
+#### 📊 Deployment Transactions
+| Module | Transaction | Status |
+|--------|-------------|--------|
+| Contract Publish | [0xb899c5...7b43](https://explorer.aptoslabs.com/txn/0xb899c5d3c1b941e4831ebc290e149df32962b575f46b74a6b495596bb2bf7b43?network=testnet) | ✅ Success |
+| FUSD Coin Init | [0x164a71...8efd](https://explorer.aptoslabs.com/txn/0x164a719bcdd345578eb58595b8acb4528f4abbc988b6216f03d4d4af6cf58efd?network=testnet) | ✅ Success |
+| Governance Init | [0xcb325b...5668](https://explorer.aptoslabs.com/txn/0xcb325b5d09239346b13ba56e170dbe42bd9f03f3bc9380cbf8f3909880fd5668?network=testnet) | ✅ Success |
+| Oracle Init | [0x994cea...0a34](https://explorer.aptoslabs.com/txn/0x994ceafa691107c3cbebd331f5f0f9e982e41c2c1e0bd5f7cfd1762815750a34?network=testnet) | ✅ Success |
+| Rebalancing Init | [0x7cde92...ca05](https://explorer.aptoslabs.com/txn/0x7cde925dc02cb4b55a960b6a576b24cc9ca5143cbcd5e8f018a825f85b4eca05?network=testnet) | ✅ Success |
+| Liquidity Pool Init | [0x6b0815...1d45](https://explorer.aptoslabs.com/txn/0x6b08154f61e3d47dba10fcb88c5d270975bf7ac2cbc172969112cc1f7a821d45?network=testnet) | ✅ Success |
+| Gas Abstraction Init | [0x83b258...f560](https://explorer.aptoslabs.com/txn/0x83b258d5432a91f803b8d7c65c136ed41db7ec0afa9c1aaa9a72ec931c8cf560?network=testnet) | ✅ Success |
+
+**Total Deployment Cost**: 0.0187 APT (~$0.19 USD)
+
+See [TESTNET_DEPLOYMENT.md](TESTNET_DEPLOYMENT.md) for complete deployment details.
 
 ## 🛠️ Setup & Testing
 
@@ -126,26 +141,51 @@ aptos init --profile fusd-testnet --network testnet
 
 ## 📖 Usage Examples
 
+### Token Information
+- **Name**: FUSD Stablecoin
+- **Symbol**: FUSD
+- **Decimals**: 8
+- **Target Peg**: $1.00 USD
+- **Supply Model**: Elastic (algorithmic expansion/contraction)
+- **Contract**: `0x2791c639877af206489abee02270c597aa6aea0e3c896b72cc99bb4832ca37e7`
+
 ### Register for FUSD
 ```bash
 aptos move run \
-  --function-id '0xb1899c39c9b05fd6b25b7b8329a355f06186d80d414578ec752135ade379a5a7::fusd_coin::register' \
-  --profile your-profile
+  --function-id '0x2791c639877af206489abee02270c597aa6aea0e3c896b72cc99bb4832ca37e7::fusd_coin::register' \
+  --profile your-profile \
+  --network testnet
 ```
 
-### Stake FUSD (90-day lock)
+### Stake FUSD (90-day lock for 30% APY)
 ```bash
 aptos move run \
-  --function-id '0xb1899c39c9b05fd6b25b7b8329a355f06186d80d414578ec752135ade379a5a7::rewards::stake' \
+  --function-id '0x2791c639877af206489abee02270c597aa6aea0e3c896b72cc99bb4832ca37e7::rewards::stake' \
   --args u64:100000000 u64:7776000 \
-  --profile your-profile
+  --profile your-profile \
+  --network testnet
 ```
 
-### Check Staking Balance
+### Check Your Staking Balance
 ```bash
 aptos move view \
-  --function-id '0xb1899c39c9b05fd6b25b7b8329a355f06186d80d414578ec752135ade379a5a7::rewards::get_total_staked' \
-  --args address:YOUR_ADDRESS
+  --function-id '0x2791c639877af206489abee02270c597aa6aea0e3c896b72cc99bb4832ca37e7::rewards::get_total_staked' \
+  --args address:YOUR_ADDRESS \
+  --network testnet
+```
+
+### View Current FUSD Supply
+```bash
+aptos move view \
+  --function-id '0x2791c639877af206489abee02270c597aa6aea0e3c896b72cc99bb4832ca37e7::fusd_coin::get_supply' \
+  --network testnet
+```
+
+### Check Oracle Price
+```bash
+aptos move view \
+  --function-id '0x2791c639877af206489abee02270c597aa6aea0e3c896b72cc99bb4832ca37e7::oracle_integration::get_price' \
+  --network testnet
 ```
 
 ## 🔒 Security Features
