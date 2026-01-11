@@ -1,0 +1,109 @@
+MIT License
+
+Copyright (c) 2026 FUSD Protocol Contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+DISCLAIMER AND RISK WARNING
+
+This software is experimental and provided for educational and research purposes only.
+The FUSD Protocol is an algorithmic stablecoin implementation that carries significant risks.
+
+BY USING THIS SOFTWARE, YOU ACKNOWLEDGE AND AGREE TO THE FOLLOWING:
+
+1. EXPERIMENTAL NATURE
+   - This is experimental software that has not undergone professional security audits
+   - The protocol may contain bugs, vulnerabilities, or design flaws
+   - Use at your own risk
+
+2. NO GUARANTEE OF PEG STABILITY
+   - FUSD is an algorithmic stablecoin that aims to maintain a $1.00 USD peg
+   - There is NO GUARANTEE that the peg will be maintained
+   - The token value may fluctuate significantly
+   - Complete loss of value is possible
+
+3. SMART CONTRACT RISKS
+   - Smart contracts are immutable once deployed
+   - Bugs or vulnerabilities cannot be easily fixed
+   - Funds may be permanently lost due to contract errors
+   - Admin keys, if compromised, could lead to total loss
+
+4. ECONOMIC RISKS
+   - Algorithmic stablecoins have historically failed (e.g., Terra UST)
+   - Death spiral scenarios are possible
+   - Insufficient liquidity can prevent peg recovery
+   - Market manipulation is possible
+
+5. REGULATORY RISKS
+   - Regulatory status of algorithmic stablecoins is uncertain
+   - Future regulations may restrict or prohibit use
+   - Tax implications may apply
+   - Compliance requirements may change
+
+6. NO FINANCIAL ADVICE
+   - This software does not constitute financial advice
+   - Consult with qualified professionals before use
+   - Do not invest more than you can afford to lose
+   - Past performance does not indicate future results
+
+7. NO WARRANTY
+   - The software is provided "AS IS" without warranty of any kind
+   - No guarantee of functionality, security, or fitness for purpose
+   - No liability for any damages, losses, or claims
+   - Use is entirely at your own risk
+
+8. TESTNET ONLY RECOMMENDATION
+   - This software is currently recommended for TESTNET USE ONLY
+   - Do not deploy to mainnet without:
+     * Professional security audit
+     * Comprehensive testing
+     * Multi-signature governance
+     * Insurance mechanisms
+     * Legal review
+
+9. CENTRALIZATION RISKS
+   - Current implementation has single admin control
+   - Admin compromise = total protocol failure
+   - No multi-signature or DAO governance (yet)
+   - Trust in admin is required
+
+10. USER RESPONSIBILITY
+    - You are responsible for:
+      * Securing your private keys
+      * Understanding the risks
+      * Complying with applicable laws
+      * Monitoring your positions
+      * Making informed decisions
+
+BY USING THIS SOFTWARE, YOU ACCEPT ALL RISKS AND AGREE TO HOLD HARMLESS THE
+AUTHORS, CONTRIBUTORS, AND COPYRIGHT HOLDERS FROM ANY AND ALL LIABILITY,
+DAMAGES, LOSSES, OR CLAIMS ARISING FROM YOUR USE OF THE SOFTWARE.
+
+IF YOU DO NOT AGREE TO THESE TERMS, DO NOT USE THIS SOFTWARE.
+
+---
+
+For questions or concerns, please refer to:
+- Security Audit: SECURITY_AUDIT.md
+- Documentation: README.md
+- Deployment Guide: DEPLOYMENT.md
+
+Last Updated: January 11, 2026

@@ -3,6 +3,10 @@
 ![Aptos](https://img.shields.io/badge/Aptos-Testnet-blue)
 ![Move](https://img.shields.io/badge/Move-Language-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
+![Security](https://img.shields.io/badge/Security-Audited-orange)
+![Status](https://img.shields.io/badge/Status-Testnet%20Only-red)
+
+> ⚠️ **SECURITY WARNING**: This is experimental software. See [SECURITY_AUDIT.md](SECURITY_AUDIT.md) for critical findings. **NOT RECOMMENDED FOR MAINNET** without addressing critical vulnerabilities.
 
 FUSD is a production-ready algorithmic stablecoin built on the Aptos blockchain, featuring dynamic supply rebalancing, protocol-owned liquidity, gas fee abstraction, and LP staking rewards.
 
@@ -176,6 +180,27 @@ aptos move view \
 - ✅ Staking and unstaking flows
 - ✅ Gas abstraction with rate limiting
 - ✅ Integration tests for full lifecycle
+
+## 🔒 Security Audit
+
+A comprehensive security audit has been conducted on the FUSD protocol. **Please review [SECURITY_AUDIT.md](SECURITY_AUDIT.md) before use.**
+
+### Critical Findings Summary
+- **3 Critical** vulnerabilities identified
+- **4 High Severity** issues found
+- **6 Medium Severity** concerns noted
+
+### Key Risks
+1. ⚠️ Centralized admin control (single point of failure)
+2. ⚠️ Death spiral risk in contraction mechanism
+3. ⚠️ Oracle manipulation vulnerability
+4. ⚠️ Reentrancy in rewards module
+
+### Deployment Status
+- ✅ **Testnet**: Approved for testing with limited funds
+- ❌ **Mainnet**: NOT RECOMMENDED without addressing critical findings
+
+See full audit report for detailed analysis and recommendations.
 
 ## 📝 License
 
