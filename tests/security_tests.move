@@ -3,12 +3,20 @@ module fusd::security_tests {
     use std::signer;
     use aptos_framework::account;
     use aptos_framework::timestamp;
-    use aptos_framework::coin;
-    use fusd::fusd_coin;
+    use aptos_framework::coin::{Self, Coin};
+    use fusd::fusd_coin::{Self, FUSD};
     use fusd::rebalancing;
     use fusd::oracle_integration;
     use fusd::governance;
     use fusd::liquidity_pool;
+
+    struct CoinHolder has key {
+        coins: Coin<FUSD>,
+    }
+
+    fun hold_coins(user: &signer, coins: Coin<FUSD>) {
+        move_to(user, CoinHolder { coins });
+    }
 
     #[test]
     fun test_timelock_enforcement() {
@@ -86,10 +94,12 @@ module fusd::security_tests {
         rebalancing::initialize_events(&admin);
         liquidity_pool::initialize(&admin);
 
-        // Initial supply (500 FUSD, within default limit of 1000)
+        // Initial supply (500 FUSD)
         let initial_supply = 500 * 100000000;
         let coins = fusd_coin::mint(&admin, initial_supply);
-        coin::deposit(signer::address_of(&admin), coins);
+        
+        // bypass coin::deposit to avoid metadata issue
+        hold_coins(&admin, coins);
 
         // Expansion to fill Insurance Fund
         oracle_integration::set_price(&admin, 110000000); // $1.10
