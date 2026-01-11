@@ -4,7 +4,7 @@ version = "0.1.0"
 upgrade_policy = "compatible"
 
 [addresses]
-fusd = "0xb1899c39c9b05fd6b25b7b8329a355f06186d80d414578ec752135ade379a5a7"
+fusd = "0x2791c639877af206489abee02270c597aa6aea0e3c896b72cc99bb4832ca37e7"
 std = "0x1"
 aptos_framework = "0x1"
 
