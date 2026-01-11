@@ -1,0 +1,14 @@
+[package]
+name = "fusd"
+version = "0.1.0"
+upgrade_policy = "compatible"
+
+[addresses]
+fusd = "0xb1899c39c9b05fd6b25b7b8329a355f06186d80d414578ec752135ade379a5a7"
+std = "0x1"
+aptos_framework = "0x1"
+
+[dependencies]
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework", rev = "testnet" }
+AptosStdlib = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-stdlib", rev = "testnet" }
+MoveStdlib = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/move-stdlib", rev = "testnet" }
