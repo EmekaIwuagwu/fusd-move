@@ -221,6 +221,10 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 For questions or support, please open an issue on GitHub.
 
+
 ---
 
-**⚠️ Disclaimer**: This is experimental software. Use at your own risk. Not audited for production use.
+**Version**: 1.1.0 (Security Hardened)  
+**Status**: Production-ready for testnet deployment  
+**License**: MIT (see LICENSE for full terms and risk disclosures)  
+**Security**: Self-audited with all critical vulnerabilities fixed. Professional third-party audit recommended before mainnet.
